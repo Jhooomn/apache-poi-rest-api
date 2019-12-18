@@ -2,6 +2,7 @@ package com.app.api.controller;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.List;
 
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -22,7 +23,7 @@ public class FileController {
 	}
 
 	@PostMapping
-	public ArrayList<String[]> fileToJSON(@RequestParam("file") MultipartFile file) {
+	public List<String[]> fileToJSON(@RequestParam("file") MultipartFile file) {
 		return fileService.upload(file);
 	}
 
