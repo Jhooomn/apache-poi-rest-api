@@ -5,7 +5,6 @@ import static java.util.stream.Collectors.toMap;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
@@ -13,7 +12,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -52,11 +50,11 @@ public class FileService {
 				.collect(Collectors.toList());
 		int colCount = headerCells.size();
 
-		return rowStreamSupplier.get().skip(1).map(row -> {
+		return rowStreamSupplier.get().skip(2).map(row -> {
 			List<String> cellList = StreamSupport.stream(row.spliterator(), false).map(c -> c.toString())
 					.collect(Collectors.toList());
 			return fileUtil.cellIteratorSupplier(colCount).get()
-					.collect(toMap(index -> headerCells.get(index), index -> headerCells.get(index)));
+					.collect(toMap(index -> headerCells.get(index), index -> cellList.get(index)));
 		}).collect(Collectors.toList());
 
 	}
