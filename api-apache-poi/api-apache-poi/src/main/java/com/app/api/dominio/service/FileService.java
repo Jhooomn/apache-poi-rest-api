@@ -1,20 +1,17 @@
 package com.app.api.dominio.service;
 
-import static java.util.stream.Collectors.toMap;
-
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -44,7 +41,9 @@ public class FileService {
 		Supplier<Stream<Row>> rowStreamSupplier = fileUtil.getRowStreamSupplier(sheet);
 		Row headerRow = rowStreamSupplier.get().findFirst().get();
 
-		for (Row row : sheet) {
+		Iterator it = sheet.iterator();
+		while (it.hasNext()) {
+			Row row = (Row) it.next();
 			for (int cn = 0; cn < row.getLastCellNum(); cn++) {
 				Cell cell = row.getCell(cn, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK);
 			}
@@ -52,6 +51,7 @@ public class FileService {
 
 		List<String> headerCells = StreamSupport.stream(headerRow.spliterator(), false).map(c -> c.toString())
 				.collect(Collectors.toList());
+
 		int colCount = headerCells.size();
 
 		return rowStreamSupplier.get().skip(1).map(row -> {
@@ -59,8 +59,9 @@ public class FileService {
 			List<String> cellList = StreamSupport.stream(row.spliterator(), false).map(c -> c.toString())
 					.collect(Collectors.toList());
 
-			return fileUtil.cellIteratorSupplier(colCount).get()
-					.collect(toMap(index -> headerCells.get(index), index -> cellList.get(index)));
+			return fileUtil.cellIteratorSupplier(colCount).get().collect(
+					Collectors.toMap(x -> headerCells.get(x), y -> cellList.get(y), (oldValue, newValue) -> newValue));
+
 		}).collect(Collectors.toList());
 
 	}
