@@ -3,6 +3,7 @@ package com.app.api.aplication;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -30,7 +31,7 @@ public class FileToJsonAplication {
 		this.fileToJsonMapper = fl;
 	}
 
-	public List<Map<String, String>> upload(MultipartFile file) throws Exception {
+	public List<Object> upload(MultipartFile file) throws Exception {
 
 		Path tempDir = Files.createTempDirectory("");
 		File tempFile = tempDir.resolve(file.getOriginalFilename()).toFile();
@@ -41,45 +42,37 @@ public class FileToJsonAplication {
 
 	}
 
-	public List<Map<String, String>> workBookToJson(Workbook workbook) {
-		Sheet sheet = workbook.getSheetAt(0);
+	public List<Object> workBookToJson(Workbook workbook) {
+		List<Object> list = new ArrayList<>();
 
-		Supplier<Stream<Row>> rowStreamSupplier = fileToJsonMapper.getRowStreamSupplier(sheet);
-		Row headerRow = rowStreamSupplier.get().findFirst().get();
+		for (int i = 0; i < workbook.getNumberOfSheets(); i++) {
+			Sheet sheet = workbook.getSheetAt(i);
+			Supplier<Stream<Row>> rowStreamSupplier = fileToJsonMapper.getRowStreamSupplier(sheet);
+			Row headerRow = rowStreamSupplier.get().findFirst().get();
 
-		Iterator it = sheet.iterator();
-		while (it.hasNext()) {
-			Row row = (Row) it.next();
-			for (int cn = 0; cn < row.getLastCellNum(); cn++) {
-				Cell cell = row.getCell(cn, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK);
+			Iterator it = sheet.iterator();
+			while (it.hasNext()) {
+				Row row = (Row) it.next();
+				for (int cn = 0; cn < row.getLastCellNum(); cn++) {
+					Cell cell = row.getCell(cn, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK);
+				}
 			}
-		}
 
-		List<String> headerCells = StreamSupport.stream(headerRow.spliterator(), false).map(c -> c.toString())
-				.collect(Collectors.toList());
-
-		int colCount = headerCells.size();
-
-		if (colCount == 0) {
-			throw new RuntimeException("No columnas");
-		}
-
-		return this.getRowStreamSupplier(rowStreamSupplier, headerCells, colCount);
-
-	}
-
-	public List<Map<String, String>> getRowStreamSupplier(Supplier<Stream<Row>> rowStreamSupplier,
-			List<String> headerCells, int colCount) {
-
-		return rowStreamSupplier.get().skip(1).map(row -> {
-
-			List<String> cellList = StreamSupport.stream(row.spliterator(), false).map(c -> c.toString())
+			List<String> headerCells = StreamSupport.stream(headerRow.spliterator(), false).map(c -> c.toString())
 					.collect(Collectors.toList());
 
-			return fileToJsonMapper.cellIteratorSupplier(colCount).get().collect(
-					Collectors.toMap(x -> headerCells.get(x), y -> cellList.get(y), (oldValue, newValue) -> newValue));
-		}).collect(Collectors.toList());
+			int colCount = headerCells.size();
 
+			list.add(rowStreamSupplier.get().skip(1).map(row -> {
+
+				List<String> cellList = StreamSupport.stream(row.spliterator(), false).map(c -> c.toString())
+						.collect(Collectors.toList());
+
+				return fileToJsonMapper.cellIteratorSupplier(colCount).get().collect(Collectors
+						.toMap(x -> headerCells.get(x), y -> cellList.get(y), (oldValue, newValue) -> newValue));
+			}).collect(Collectors.toList()));
+		}
+		return list;
 	}
 
 }

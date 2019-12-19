@@ -24,7 +24,7 @@ public class FileToJsonController {
 	}
 
 	@PostMapping
-	public List<Map<String, String>> fileToJSON(@RequestParam("file") MultipartFile file) throws Exception {
+	public List<Object> fileToJSON(@RequestParam("file") MultipartFile file) throws Exception {
 		return fileToJsonAplication.upload(file);
 	}
 
