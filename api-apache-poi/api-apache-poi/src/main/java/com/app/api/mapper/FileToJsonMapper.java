@@ -1,4 +1,4 @@
-package com.app.api.util;
+package com.app.api.mapper;
 
 import java.util.function.Supplier;
 import java.util.stream.IntStream;
@@ -9,7 +9,7 @@ import org.apache.poi.ss.usermodel.Row;
 import org.springframework.stereotype.Component;
 
 @Component
-public class FileUtil {
+public class FileToJsonMapper {
 
 	public Supplier<Stream<Row>> getRowStreamSupplier(Iterable<Row> rows) {
 		return () -> getStream(rows);

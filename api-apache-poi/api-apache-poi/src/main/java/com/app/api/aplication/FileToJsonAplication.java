@@ -1,4 +1,4 @@
-package com.app.api.dominio.service;
+package com.app.api.aplication;
 
 import java.io.File;
 import java.nio.file.Files;
@@ -16,18 +16,17 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
-import org.springframework.stereotype.Service;
+
 import org.springframework.web.multipart.MultipartFile;
 
-import com.app.api.util.FileUtil;
+import com.app.api.mapper.FileToJsonMapper;
 
-@Service
-public class FileService {
+public class FileToJsonAplication {
 
-	FileUtil fileUtil;
+	FileToJsonMapper fileToJsonMapper;
 
-	public FileService(FileUtil fl) {
-		this.fileUtil = fl;
+	public FileToJsonAplication(FileToJsonMapper fl) {
+		this.fileToJsonMapper = fl;
 	}
 
 	public List<Map<String, String>> upload(MultipartFile file) throws Exception {
@@ -38,7 +37,7 @@ public class FileService {
 		Workbook workbook = WorkbookFactory.create(tempFile);
 		Sheet sheet = workbook.getSheetAt(0);
 
-		Supplier<Stream<Row>> rowStreamSupplier = fileUtil.getRowStreamSupplier(sheet);
+		Supplier<Stream<Row>> rowStreamSupplier = fileToJsonMapper.getRowStreamSupplier(sheet);
 		Row headerRow = rowStreamSupplier.get().findFirst().get();
 
 		Iterator it = sheet.iterator();
@@ -59,7 +58,7 @@ public class FileService {
 			List<String> cellList = StreamSupport.stream(row.spliterator(), false).map(c -> c.toString())
 					.collect(Collectors.toList());
 
-			return fileUtil.cellIteratorSupplier(colCount).get().collect(
+			return fileToJsonMapper.cellIteratorSupplier(colCount).get().collect(
 					Collectors.toMap(x -> headerCells.get(x), y -> cellList.get(y), (oldValue, newValue) -> newValue));
 
 		}).collect(Collectors.toList());
