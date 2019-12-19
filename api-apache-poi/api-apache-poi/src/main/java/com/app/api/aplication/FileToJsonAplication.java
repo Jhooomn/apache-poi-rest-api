@@ -19,7 +19,8 @@ import org.apache.poi.ss.usermodel.WorkbookFactory;
 
 import org.springframework.web.multipart.MultipartFile;
 
-import com.app.api.mapper.FileToJsonMapper;
+import com.app.api.exceptions.CrashedFileException;
+import com.app.api.infrastucture.mapper.FileToJsonMapper;
 
 public class FileToJsonAplication {
 
@@ -35,6 +36,12 @@ public class FileToJsonAplication {
 		File tempFile = tempDir.resolve(file.getOriginalFilename()).toFile();
 		file.transferTo(tempFile);
 		Workbook workbook = WorkbookFactory.create(tempFile);
+
+		return this.workBookToJson(workbook);
+
+	}
+
+	public List<Map<String, String>> workBookToJson(Workbook workbook) {
 		Sheet sheet = workbook.getSheetAt(0);
 
 		Supplier<Stream<Row>> rowStreamSupplier = fileToJsonMapper.getRowStreamSupplier(sheet);
@@ -53,6 +60,17 @@ public class FileToJsonAplication {
 
 		int colCount = headerCells.size();
 
+		if (colCount == 0) {
+			throw new RuntimeException("No columnas");
+		}
+
+		return this.getRowStreamSupplier(rowStreamSupplier, headerCells, colCount);
+
+	}
+
+	public List<Map<String, String>> getRowStreamSupplier(Supplier<Stream<Row>> rowStreamSupplier,
+			List<String> headerCells, int colCount) {
+
 		return rowStreamSupplier.get().skip(1).map(row -> {
 
 			List<String> cellList = StreamSupport.stream(row.spliterator(), false).map(c -> c.toString())
@@ -60,7 +78,6 @@ public class FileToJsonAplication {
 
 			return fileToJsonMapper.cellIteratorSupplier(colCount).get().collect(
 					Collectors.toMap(x -> headerCells.get(x), y -> cellList.get(y), (oldValue, newValue) -> newValue));
-
 		}).collect(Collectors.toList());
 
 	}

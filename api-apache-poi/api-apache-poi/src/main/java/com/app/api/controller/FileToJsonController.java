@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.app.api.aplication.FileToJsonAplication;
-import com.app.api.mapper.FileToJsonMapper;
+import com.app.api.infrastucture.mapper.FileToJsonMapper;
 
 @RestController
 @RequestMapping("/file")

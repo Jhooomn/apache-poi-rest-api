@@ -1,4 +1,4 @@
-package com.app.api.mapper;
+package com.app.api.infrastucture.mapper;
 
 import java.util.function.Supplier;
 import java.util.stream.IntStream;
