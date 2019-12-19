@@ -8,6 +8,7 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -52,6 +53,7 @@ public class FileService {
 
 		List<String> headerCells = StreamSupport.stream(headerRow.spliterator(), false).map(c -> c.toString())
 				.collect(Collectors.toList());
+
 		int colCount = headerCells.size();
 
 		return rowStreamSupplier.get().skip(1).map(row -> {
@@ -59,8 +61,8 @@ public class FileService {
 			List<String> cellList = StreamSupport.stream(row.spliterator(), false).map(c -> c.toString())
 					.collect(Collectors.toList());
 
-			return fileUtil.cellIteratorSupplier(colCount).get()
-					.collect(toMap(index -> headerCells.get(index), index -> cellList.get(index)));
+			return fileUtil.cellIteratorSupplier(colCount).get().collect(Collectors.toMap(
+					index -> headerCells.get(index), index -> cellList.get(index), (oldValue, newValue) -> newValue));
 		}).collect(Collectors.toList());
 
 	}
