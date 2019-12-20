@@ -48,15 +48,17 @@ public class FileToJsonAplication {
 	}
 
 	public List<Object> nSheetsWorkBookToJson(Workbook workbook) {
-		List<Object> list = new ArrayList<>();
 
+		List<Object> list = new ArrayList<>();
 		int i = 0;
+
 		while (i < workbook.getNumberOfSheets()) {
 			Sheet sheet = workbook.getSheetAt(i);
 
 			Supplier<Stream<Row>> rowStreamSupplier = fileToJsonMapper.getRowStreamSupplier(sheet);
-			Row headerRow = rowStreamSupplier.get().findFirst().get();
+			Row headerRow = rowStreamSupplier.get().findFirst().orElse(null);
 
+			//
 			Iterator it = sheet.iterator();
 			while (it.hasNext()) {
 				Row row = (Row) it.next();
@@ -64,11 +66,13 @@ public class FileToJsonAplication {
 					Cell cell = row.getCell(cn, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK);
 				}
 			}
-
-			List<String> headerCells = StreamSupport.stream(headerRow.spliterator(), false).map(c -> c.toString())
-					.collect(Collectors.toList());
-
-			int colCount = headerCells.size();
+			//
+			List<String> headerCells = this.getHeaderCells(headerRow);
+			//
+			if (headerCells == null) {
+				return list;
+			}
+			Integer colCount = headerCells.size();
 
 			list.add(rowStreamSupplier.get().skip(1).map(row -> {
 
@@ -79,6 +83,8 @@ public class FileToJsonAplication {
 						.toMap(x -> headerCells.get(x), y -> cellList.get(y), (oldValue, newValue) -> newValue));
 			}).collect(Collectors.toList()));
 			i++;
+			//
+
 		}
 		return list;
 	}
@@ -97,8 +103,9 @@ public class FileToJsonAplication {
 			}
 		}
 
-		List<String> headerCells = StreamSupport.stream(headerRow.spliterator(), false).map(c -> c.toString())
-				.collect(Collectors.toList());
+		//
+		List<String> headerCells = this.getHeaderCells(headerRow);
+		//
 
 		int colCount = headerCells.size();
 
@@ -112,6 +119,15 @@ public class FileToJsonAplication {
 		}).collect(Collectors.toList()));
 
 		return list;
+	}
+
+	public List<String> getHeaderCells(Row headerRow) {
+		try {
+			System.out.println("cell number: " + headerRow.getPhysicalNumberOfCells());
+		} catch (Exception e) {
+			return null;
+		}
+		return StreamSupport.stream(headerRow.spliterator(), false).map(c -> c.toString()).collect(Collectors.toList());
 	}
 
 }
